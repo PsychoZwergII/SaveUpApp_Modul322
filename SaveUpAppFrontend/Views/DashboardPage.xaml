@@ -1,0 +1,87 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SaveUpAppFrontend.ViewModels"
+             x:Class="SaveUpAppFrontend.Views.DashboardPage"
+             Title="Dashboard"
+             BackgroundColor="{DynamicResource PageBackgroundColor}">
+
+	<ContentPage.BindingContext>
+		<vm:DashboardViewModel />
+	</ContentPage.BindingContext>
+
+	<ScrollView>
+		<VerticalStackLayout Padding="20" Spacing="20">
+			<!-- Add Product Section -->
+			<Frame CornerRadius="12" Padding="15" BackgroundColor="{DynamicResource CardBackgroundColor}">
+				<VerticalStackLayout Spacing="15">
+					<Label Text="Neues Produkt hinzufügen"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{DynamicResource PrimaryTextColor}"/>
+
+					<Entry Placeholder="Produktname"
+                           Text="{Binding NewProduct.Description}"
+                           BackgroundColor="Transparent"/>
+
+					<Entry Placeholder="Preis (CHF)"
+                           Text="{Binding NewProduct.Price, StringFormat='{0:F2}'}"
+                           Keyboard="Numeric"
+                           BackgroundColor="Transparent"/>
+
+					<Button Text="Hinzufügen"
+                            Command="{Binding AddCommand}"
+                            BackgroundColor="{DynamicResource PrimaryColor}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            HeightRequest="45"/>
+				</VerticalStackLayout>
+			</Frame>
+
+			<!-- Product List -->
+			<Label Text="Meine Produkte"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   TextColor="{DynamicResource PrimaryTextColor}"/>
+
+			<CollectionView ItemsSource="{Binding Products}">
+				<CollectionView.ItemTemplate>
+					<DataTemplate>
+						<Frame CornerRadius="8" Padding="10" BackgroundColor="{DynamicResource CardBackgroundColor}">
+							<Grid ColumnDefinitions="*,Auto,Auto" RowSpacing="5">
+								<Label Text="{Binding Description}"
+                                       Grid.Column="0"
+                                       FontSize="16"
+                                       VerticalOptions="Center"/>
+
+								<Label Text="{Binding Price, StringFormat='CHF {0:F2}'}"
+                                       Grid.Column="1"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"
+                                       Margin="0,0,15,0"/>
+
+								<Button Text="✕"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=DeleteCommand}"
+                                        CommandParameter="{Binding Id}"
+                                        BackgroundColor="{DynamicResource ErrorColor}"
+                                        TextColor="White"
+                                        CornerRadius="20"
+                                        WidthRequest="40"
+                                        HeightRequest="40"
+                                        Grid.Column="2"/>
+							</Grid>
+						</Frame>
+					</DataTemplate>
+				</CollectionView.ItemTemplate>
+
+				<CollectionView.EmptyView>
+					<Label Text="Keine Produkte hinzugefügt"
+                           FontSize="16"
+                           HorizontalOptions="Center"
+                           TextColor="{DynamicResource SecondaryTextColor}"
+                           Margin="0,20"/>
+				</CollectionView.EmptyView>
+			</CollectionView>
+		</VerticalStackLayout>
+	</ScrollView>
+</ContentPage>
