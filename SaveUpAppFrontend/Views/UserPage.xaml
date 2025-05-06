@@ -10,7 +10,7 @@
 	</ContentPage.BindingContext>
 
 	<ScrollView>
-		<VerticalStackLayout Padding="20" Spacing="15">
+		<VerticalStackLayout Padding="20" Spacing="20">
 			<!-- Header -->
 			<Label Text="Mein Profil"
                    FontSize="28"
@@ -18,15 +18,16 @@
                    HorizontalOptions="Center"
                    TextColor="{DynamicResource PrimaryTextColor}"/>
 
-			<!-- User Stats Cards -->
+			<!-- User Stats Card -->
 			<Frame CornerRadius="12" Padding="15" BackgroundColor="{DynamicResource CardBackgroundColor}">
-				<VerticalStackLayout Spacing="10">
+				<VerticalStackLayout Spacing="15">
 					<Label Text="Statistiken"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="{DynamicResource PrimaryTextColor}"/>
 
-					<Grid ColumnDefinitions="*,*" RowDefinitions="*,*,*" RowSpacing="10">
+					<Grid ColumnDefinitions="*,*" RowDefinitions="*,*,*,*" RowSpacing="12">
+						<!-- Mitglied seit -->
 						<Label Text="Mitglied seit:"
                                Grid.Row="0" Grid.Column="0"
                                FontSize="14"/>
@@ -36,6 +37,7 @@
                                FontAttributes="Bold"
                                HorizontalOptions="End"/>
 
+						<!-- Gespart -->
 						<Label Text="Gespart:"
                                Grid.Row="1" Grid.Column="0"
                                FontSize="14"/>
@@ -45,6 +47,7 @@
                                FontAttributes="Bold"
                                HorizontalOptions="End"/>
 
+						<!-- Verzichtete Produkte -->
 						<Label Text="Verzichtete Produkte:"
                                Grid.Row="2" Grid.Column="0"
                                FontSize="14"/>
@@ -53,6 +56,18 @@
                                FontSize="14"
                                FontAttributes="Bold"
                                HorizontalOptions="End"/>
+
+						<!-- Sparziel -->
+						<Label Text="Sparziel:"
+                               Grid.Row="3" Grid.Column="0"
+                               FontSize="14"/>
+						<Entry Text="{Binding SavingGoal, Mode=TwoWay}"
+                               Grid.Row="3" Grid.Column="1"
+                               Placeholder="CHF 0.00"
+                               Keyboard="Numeric"
+                               FontSize="14"
+                               HorizontalOptions="Fill"
+                               HorizontalTextAlignment="End"/>
 					</Grid>
 				</VerticalStackLayout>
 			</Frame>
@@ -77,6 +92,15 @@
 					</Picker>
 				</VerticalStackLayout>
 			</Frame>
-		</VerticalStackLayout>
+
+			<!-- Optional: Save Button für Sparziel -->
+            <Button Text="Sparziel speichern"
+            Command="{Binding SaveGoalCommand}"
+            BackgroundColor="{DynamicResource PrimaryColor}"
+            TextColor="White"
+            CornerRadius="8"
+            HeightRequest="45"
+            HorizontalOptions="Fill"/>
+        </VerticalStackLayout>
 	</ScrollView>
 </ContentPage>

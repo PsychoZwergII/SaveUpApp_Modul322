@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using SaveUpAppFrontend.Models;
 using SaveUpAppFrontend.Services;
+using SaveUpAppFrontend.ViewModels;
 
 namespace SaveUpAppFrontend.ViewModels
 {
@@ -15,12 +16,13 @@ namespace SaveUpAppFrontend.ViewModels
         public ICommand LoadCommand { get; }
         public ICommand AddCommand { get; }
         public ICommand DeleteCommand { get; }
+        public ICommand DeleteAllCommand { get; }
 
         public Product NewProduct { get; set; } = new();
-
         private string _newDescription = string.Empty;
         private double _newPrice;
         private bool _isBusy;
+
 
         public string NewDescription
         {
@@ -71,6 +73,7 @@ namespace SaveUpAppFrontend.ViewModels
             LoadCommand = new Command(async () => await LoadProducts());
             AddCommand = new Command(async () => await AddProduct(), () => !IsBusy);
             DeleteCommand = new Command<int>(async (id) => await DeleteProduct(id), (id) => !IsBusy);
+            DeleteAllCommand = new Command(async () => await DeleteAllProducts());
 
             _ = LoadProducts();
         }
@@ -79,20 +82,25 @@ namespace SaveUpAppFrontend.ViewModels
         {
             try
             {
-                IsBusy = true;
+                // Lade Produkte von der API
                 var products = await _apiService.GetProductsAsync();
-                Products.Clear();
-                foreach (var p in products)
-                    Products.Add(p);
+
+                // Leere die bestehende Liste (falls vorhanden)
+                //Products.Clear();
+
+                // Füge die Produkte zur ObservableCollection hinzu
+                foreach (var product in products)
+                {
+                    Products.Add(product);
+                }
+
+                // Optional: Debugging-Log
+                Console.WriteLine($"Successfully loaded {Products.Count} products.");
             }
             catch (Exception ex)
             {
-                // Handle exceptions (e.g., API errors)
+                // Fehler behandeln
                 Console.WriteLine($"Error loading products: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
             }
         }
 
@@ -105,19 +113,27 @@ namespace SaveUpAppFrontend.ViewModels
             {
                 IsBusy = true;
                 if (string.IsNullOrWhiteSpace(NewProduct.Description) || NewProduct.Price <= 0)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Fehler", "Beschreibung und Preis müssen gültig sein!", "OK");
                     return;
+                }
 
                 NewProduct.Date = DateTime.Now;
                 var created = await _apiService.AddProductAsync(NewProduct);
-                Products.Add(created);
 
-                // Eingabefelder zurücksetzen
-                NewProduct = new Product(); // neues leeres Produkt
-                OnPropertyChanged(nameof(NewProduct));
+                if (created != null)
+                {
+                    Products.Add(created); // Aktualisiere die Liste
+                    NewProduct = new Product(); // Zurücksetzen für neues Produkt
+                    OnPropertyChanged(nameof(NewProduct));
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Fehler", "Produkt konnte nicht hinzugefügt werden.", "OK");
+                }
             }
             catch (Exception ex)
             {
-                // Detaillierte Fehlerausgabe
                 Console.WriteLine($"Fehler beim Hinzufügen des Produkts: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Fehler", ex.Message, "OK");
             }
@@ -127,6 +143,31 @@ namespace SaveUpAppFrontend.ViewModels
             }
         }
 
+        private async Task DeleteAllProducts()
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+                IsBusy = true;
+
+                // Lösche jedes Produkt einzeln
+                foreach (var product in Products.ToList())
+                {
+                    await _apiService.DeleteProductAsync(product.Id); // API-Aufruf für jedes Produkt
+                    Products.Remove(product); // Entferne das Produkt aus der Liste
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting all products: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
 
         private async Task DeleteProduct(int id)
         {
@@ -151,5 +192,6 @@ namespace SaveUpAppFrontend.ViewModels
                 IsBusy = false;
             }
         }
+        
     }
 }

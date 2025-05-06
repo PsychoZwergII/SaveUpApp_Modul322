@@ -1,11 +1,13 @@
-// Views/DashboardPage.xaml.cs
-namespace SaveUpAppFrontend.Views
+using SaveUpAppFrontend.ViewModels;
+
+namespace SaveUpAppFrontend.Views;
+
+public partial class DashboardPage : ContentPage
 {
-    public partial class DashboardPage : ContentPage
+    public DashboardPage(DashboardViewModel dashboardViewModel)
     {
-        public DashboardPage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+
+        
     }
 }

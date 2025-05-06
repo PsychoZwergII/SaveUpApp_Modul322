@@ -16,8 +16,10 @@ namespace SaveUpAppBackend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Product>>> Get() =>
-            Ok(await _service.GetProductsAsync());
+        public async Task<ActionResult<List<Product>>> Get()
+        {
+            return Ok(await _service.GetProductsAsync());
+        }
 
         [HttpPost]
         public async Task<ActionResult<Product>> Post(Product product)
@@ -26,13 +28,13 @@ namespace SaveUpAppBackend.Controllers
             return Ok(await _service.CreateProductAsync(product));
         }
 
-       /* [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(string id)
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)  // id bleibt int
         {
             var success = await _service.DeleteProductAsync(id);
             if (!success) return NotFound();
             return NoContent();
-        }*/
+        }
 
         [HttpDelete("clear")]
         public async Task<ActionResult> ClearAll()

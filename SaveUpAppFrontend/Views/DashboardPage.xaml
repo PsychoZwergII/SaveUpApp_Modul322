@@ -5,62 +5,90 @@
              Title="Dashboard"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 
-	<ContentPage.BindingContext>
-		<vm:DashboardViewModel />
-	</ContentPage.BindingContext>
+    <ContentPage.BindingContext>
+        <vm:DashboardViewModel />
+    </ContentPage.BindingContext>
 
-	<ScrollView>
-		<VerticalStackLayout Padding="20" Spacing="20">
-			<!-- Add Product Section -->
-			<Frame CornerRadius="12" Padding="15" BackgroundColor="{DynamicResource CardBackgroundColor}">
-				<VerticalStackLayout Spacing="15">
-					<Label Text="Neues Produkt hinzufügen"
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+         <!-- Add Product Section -->
+            <Frame CornerRadius="12" Padding="15" BackgroundColor="{DynamicResource CardBackgroundColor}">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Neues Produkt hinzufügen"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="{DynamicResource PrimaryTextColor}"/>
 
-					<Entry Placeholder="Produktname"
+                    <Entry Placeholder="Produktname"
                            Text="{Binding NewProduct.Description}"
-                           BackgroundColor="Transparent"/>
+                           BackgroundColor="Transparent"
+                           ClearButtonVisibility="WhileEditing"/>
 
-					<Entry Placeholder="Preis (CHF)"
-                           Text="{Binding NewProduct.Price, StringFormat='{0:F2}'}"
-                           Keyboard="Numeric"
-                           BackgroundColor="Transparent"/>
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Entry Placeholder="0.00"
+                               Text="{Binding NewProduct.Price, StringFormat='{0:F2}'}"
+                               Keyboard="Numeric"
+                               BackgroundColor="Transparent"
+                               ClearButtonVisibility="WhileEditing"/>
 
-					<Button Text="Hinzufügen"
+                        <Label Text="CHF" 
+                               Grid.Column="1"
+                               FontSize="16"
+                               VerticalOptions="Center"/>
+                    </Grid>
+
+                    <Button Text="Hinzufügen"
                             Command="{Binding AddCommand}"
                             BackgroundColor="{DynamicResource PrimaryColor}"
                             TextColor="White"
                             CornerRadius="8"
-                            HeightRequest="45"/>
-				</VerticalStackLayout>
-			</Frame>
+                            HeightRequest="45"
+                            FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Frame>
 
-			<!-- Product List -->
-			<Label Text="Meine Produkte"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   TextColor="{DynamicResource PrimaryTextColor}"/>
+            <!-- Product List Header -->
+            <Grid ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                <Label Text="Meine Produkte"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource PrimaryTextColor}"/>
 
-			<CollectionView ItemsSource="{Binding Products}">
-				<CollectionView.ItemTemplate>
-					<DataTemplate>
-						<Frame CornerRadius="8" Padding="10" BackgroundColor="{DynamicResource CardBackgroundColor}">
-							<Grid ColumnDefinitions="*,Auto,Auto" RowSpacing="5">
-								<Label Text="{Binding Description}"
-                                       Grid.Column="0"
+                <Button Text="Alle löschen"
+                        Command="{Binding DeleteAllCommand}"
+                        TextColor="White"
+                        BackgroundColor="{DynamicResource ErrorColor}"
+                        FontAttributes="Bold"
+                        Grid.Column="1"/>
+            </Grid>
+
+            <!-- Product List -->
+            <CollectionView ItemsSource="{Binding Products}" 
+                           SelectionMode="None"
+                           EmptyView="Keine Produkte hinzugefügt">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame CornerRadius="10" 
+                               Padding="15" 
+                               BackgroundColor="{DynamicResource CardBackgroundColor}"
+                               Margin="0,0,0,10">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                <!-- Product Description -->
+                                <Label Text="{Binding Description}"
                                        FontSize="16"
-                                       VerticalOptions="Center"/>
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"/>
 
-								<Label Text="{Binding Price, StringFormat='CHF {0:F2}'}"
+                                <!-- Price -->
+                                <Label Text="{Binding Price, StringFormat='{0:C}'}"
                                        Grid.Column="1"
                                        FontSize="16"
                                        FontAttributes="Bold"
-                                       VerticalOptions="Center"
-                                       Margin="0,0,15,0"/>
+                                       VerticalOptions="Center"/>
 
-								<Button Text="✕"
+                                <!-- Delete Button -->
+                                <Button Text="✕"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DashboardViewModel}}, Path=DeleteCommand}"
                                         CommandParameter="{Binding Id}"
                                         BackgroundColor="{DynamicResource ErrorColor}"
@@ -69,19 +97,13 @@
                                         WidthRequest="40"
                                         HeightRequest="40"
                                         Grid.Column="2"/>
-							</Grid>
-						</Frame>
-					</DataTemplate>
-				</CollectionView.ItemTemplate>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
 
-				<CollectionView.EmptyView>
-					<Label Text="Keine Produkte hinzugefügt"
-                           FontSize="16"
-                           HorizontalOptions="Center"
-                           TextColor="{DynamicResource SecondaryTextColor}"
-                           Margin="0,20"/>
-				</CollectionView.EmptyView>
-			</CollectionView>
-		</VerticalStackLayout>
-	</ScrollView>
+                
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

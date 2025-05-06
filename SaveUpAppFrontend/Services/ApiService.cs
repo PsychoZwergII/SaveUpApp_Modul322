@@ -16,19 +16,34 @@ namespace SaveUpAppFrontend.Services
             };
         }
 
-        public async Task<List<Product>> GetProductsAsync() =>
-            await _httpClient.GetFromJsonAsync<List<Product>>("products");
-
+        public async Task<List<Product>> GetProductsAsync()
+        {
+            return await _httpClient.GetFromJsonAsync<List<Product>>("products");
+        }
         public async Task<Product> AddProductAsync(Product product)
         {
             var response = await _httpClient.PostAsJsonAsync("products", product);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Fehler beim Hinzufügen: {response.ReasonPhrase}");
+            }
+
             return await response.Content.ReadFromJsonAsync<Product>();
         }
 
-        public async Task DeleteProductAsync(int id) =>
-            await _httpClient.DeleteAsync($"products/{id}");
+        public async Task DeleteProductAsync(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"products/{id}");
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to delete product with ID {id}. Status Code: {response.StatusCode}");
+            }
+        }
 
-        public async Task DeleteAllAsync() =>
-            await _httpClient.DeleteAsync("products");
+        public async Task DeleteAllAsync()
+        {
+            await _httpClient.DeleteAsync("products/clear");
+        }
     }
 }

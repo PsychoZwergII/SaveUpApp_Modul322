@@ -28,18 +28,22 @@
                        FontAttributes="Bold"
                        TextColor="White"
                        HorizontalOptions="Center"/>
+
+				<Label Text="{Binding SavingGoal, StringFormat='Sparziel: {0:C}'}" FontSize="Medium" />
+				
 			</VerticalStackLayout>
 		</Frame>
 
-		<!-- Savings Progress (optional) -->
-		<ProgressBar Progress="0.6"
-                     ProgressColor="{DynamicResource SecondaryColor}"
-                     BackgroundColor="{DynamicResource SecondaryLightColor}"
-                     HeightRequest="10"/>
+		<!-- Progress Bar -->
+		<ProgressBar Progress="{Binding ProgressPercentage}"
+					 ProgressColor="Violet"
+                     HorizontalOptions="FillAndExpand"
+                     HeightRequest="20" />
 
-		<Label Text="60% Ihres Sparziels erreicht"
-               FontSize="14"
+		<!-- Progress Percentage -->
+		<Label Text="{Binding ProgressPercentage, StringFormat='{0:P0} erreicht'}"
+               FontSize="Medium"
                HorizontalOptions="Center"
-               TextColor="{DynamicResource SecondaryTextColor}"/>
+               Margin="0,10,0,0" />
 	</VerticalStackLayout>
 </ContentPage>
