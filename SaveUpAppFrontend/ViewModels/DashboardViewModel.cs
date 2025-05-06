@@ -78,29 +78,59 @@ namespace SaveUpAppFrontend.ViewModels
             _ = LoadProducts();
         }
 
+        /* private async Task LoadProducts()
+         {
+             try
+             {
+                 // Lade Produkte von der API
+                 var products = await _apiService.GetProductsAsync();
+
+                 // Leere die bestehende Liste (falls vorhanden)
+                 //Products.Clear();
+
+                 // Füge die Produkte zur ObservableCollection hinzu
+                 foreach (var product in products)
+                 {
+                     Products.Add(product);
+                 }
+
+                 // Optional: Debugging-Log
+                 Console.WriteLine($"Successfully loaded {Products.Count} products.");
+             }
+             catch (Exception ex)
+             {
+                 // Fehler behandeln
+                 Console.WriteLine($"Error loading products: {ex.Message}");
+             }
+         }*/
         private async Task LoadProducts()
         {
             try
             {
-                // Lade Produkte von der API
+                IsBusy = true;
+
+                // Lade Produkte aus der Backend-API
                 var products = await _apiService.GetProductsAsync();
 
-                // Leere die bestehende Liste (falls vorhanden)
-                //Products.Clear();
+                // Falls Backend offline, lade aus lokaler Datei
+                if (!products.Any())
+                {
+                    products = await _apiService.LoadFromLocalFileAsync();
+                }
 
-                // Füge die Produkte zur ObservableCollection hinzu
+                Products.Clear();
                 foreach (var product in products)
                 {
                     Products.Add(product);
                 }
-
-                // Optional: Debugging-Log
-                Console.WriteLine($"Successfully loaded {Products.Count} products.");
             }
             catch (Exception ex)
             {
-                // Fehler behandeln
                 Console.WriteLine($"Error loading products: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 

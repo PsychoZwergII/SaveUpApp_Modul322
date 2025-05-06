@@ -1,5 +1,6 @@
 ﻿// Services/ApiService.cs
 using System.Net.Http.Json;
+using System.Text.Json;
 using SaveUpAppFrontend.Models;
 
 namespace SaveUpAppFrontend.Services
@@ -7,6 +8,7 @@ namespace SaveUpAppFrontend.Services
     public class ApiService
     {
         private readonly HttpClient _httpClient;
+        private readonly string _localFilePath;
 
         public ApiService()
         {
@@ -14,7 +16,41 @@ namespace SaveUpAppFrontend.Services
             {
                 BaseAddress = new Uri("https://localhost:7137/api/") // ggf. anpassen
             };
+            // Lokaler Dateipfad
+            _localFilePath = Path.Combine(FileSystem.AppDataDirectory, "products.json");
         }
+
+        public async Task SaveToLocalFileAsync(IEnumerable<Product> products)
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(products, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_localFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving to local file: {ex.Message}");
+            }
+        }
+
+        public async Task<List<Product>> LoadFromLocalFileAsync()
+        {
+            try
+            {
+                if (File.Exists(_localFilePath))
+                {
+                    var json = await File.ReadAllTextAsync(_localFilePath);
+                    return JsonSerializer.Deserialize<List<Product>>(json) ?? new List<Product>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading from local file: {ex.Message}");
+            }
+
+            return new List<Product>();
+        }
+               
 
         public async Task<List<Product>> GetProductsAsync()
         {
