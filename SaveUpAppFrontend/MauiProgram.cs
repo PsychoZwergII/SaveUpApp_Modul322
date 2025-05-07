@@ -1,5 +1,6 @@
 ﻿using SaveUpAppFrontend.Services;
 using SaveUpAppFrontend.ViewModels;
+using SaveUpAppFrontend.Models;
 
 namespace SaveUpAppFrontend;
 
@@ -23,6 +24,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<SavingsViewModel>();
         builder.Services.AddSingleton<DashboardViewModel>();
 
+        // Registriere JsonStorageService als Singleton
+        builder.Services.AddSingleton<JsonStorageService<Product>>(provider =>
+        {
+            return new JsonStorageService<Product>("products.json");
+        });
 
         return builder.Build();
     }

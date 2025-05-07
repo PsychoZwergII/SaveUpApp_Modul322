@@ -4,13 +4,13 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using SaveUpAppFrontend.Models;
 using SaveUpAppFrontend.Services;
-using SaveUpAppFrontend.ViewModels;
 
 namespace SaveUpAppFrontend.ViewModels
 {
     public class DashboardViewModel : BaseViewModel
     {
         private readonly ApiService _apiService;
+        private readonly JsonStorageService<Product> _jsonStorage;
 
         public ObservableCollection<Product> Products { get; set; } = new();
         public ICommand LoadCommand { get; }
@@ -22,7 +22,6 @@ namespace SaveUpAppFrontend.ViewModels
         private string _newDescription = string.Empty;
         private double _newPrice;
         private bool _isBusy;
-
 
         public string NewDescription
         {
@@ -42,7 +41,6 @@ namespace SaveUpAppFrontend.ViewModels
             get => _newPrice;
             set
             {
-                // Wenn der Wert geändert wird, auf zwei Dezimalstellen runden
                 if (_newPrice != value)
                 {
                     _newPrice = Math.Round(value, 2);
@@ -60,7 +58,6 @@ namespace SaveUpAppFrontend.ViewModels
                 {
                     _isBusy = value;
                     OnPropertyChanged();
-                    // Optionale Anpassung: Buttons deaktivieren, wenn IsBusy true ist
                     ((Command)AddCommand).ChangeCanExecute();
                     ((Command)DeleteCommand).ChangeCanExecute();
                 }
@@ -70,6 +67,8 @@ namespace SaveUpAppFrontend.ViewModels
         public DashboardViewModel()
         {
             _apiService = new ApiService();
+            _jsonStorage = new JsonStorageService<Product>("products.json");
+
             LoadCommand = new Command(async () => await LoadProducts());
             AddCommand = new Command(async () => await AddProduct(), () => !IsBusy);
             DeleteCommand = new Command<int>(async (id) => await DeleteProduct(id), (id) => !IsBusy);
@@ -78,50 +77,40 @@ namespace SaveUpAppFrontend.ViewModels
             _ = LoadProducts();
         }
 
-        /* private async Task LoadProducts()
-         {
-             try
-             {
-                 // Lade Produkte von der API
-                 var products = await _apiService.GetProductsAsync();
-
-                 // Leere die bestehende Liste (falls vorhanden)
-                 //Products.Clear();
-
-                 // Füge die Produkte zur ObservableCollection hinzu
-                 foreach (var product in products)
-                 {
-                     Products.Add(product);
-                 }
-
-                 // Optional: Debugging-Log
-                 Console.WriteLine($"Successfully loaded {Products.Count} products.");
-             }
-             catch (Exception ex)
-             {
-                 // Fehler behandeln
-                 Console.WriteLine($"Error loading products: {ex.Message}");
-             }
-         }*/
         private async Task LoadProducts()
         {
             try
             {
                 IsBusy = true;
 
-                // Lade Produkte aus der Backend-API
-                var products = await _apiService.GetProductsAsync();
+                // Versuche, Produkte aus der API zu laden
+                var products = new List<Product>();
+                try
+                {
+                    products = await _apiService.GetProductsAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"API nicht verfügbar, lade Produkte aus der lokalen Datei: {ex.Message}");
+                }
 
-                // Falls Backend offline, lade aus lokaler Datei
+                // Falls keine Produkte geladen wurden, verwende die lokale JSON-Datei
                 if (!products.Any())
                 {
-                    products = await _apiService.LoadFromLocalFileAsync();
+                    Console.WriteLine("Lade Produkte aus der lokalen JSON-Datei...");
+                    products = await _jsonStorage.LoadFromFileAsync();
                 }
 
                 Products.Clear();
                 foreach (var product in products)
                 {
                     Products.Add(product);
+                }
+
+                // Synchronisiere die JSON-Datei mit der API, wenn Daten existieren
+                if (products.Any())
+                {
+                    await _jsonStorage.SaveToFileAsync(products);
                 }
             }
             catch (Exception ex)
@@ -149,23 +138,91 @@ namespace SaveUpAppFrontend.ViewModels
                 }
 
                 NewProduct.Date = DateTime.Now;
-                var created = await _apiService.AddProductAsync(NewProduct);
+
+                Product created = null;
+                try
+                {
+                    // Versuche, das Produkt über die API hinzuzufügen
+                    created = await _apiService.AddProductAsync(NewProduct);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"API nicht verfügbar, speichere Produkt lokal: {ex.Message}");
+                }
 
                 if (created != null)
                 {
-                    Products.Add(created); // Aktualisiere die Liste
-                    NewProduct = new Product(); // Zurücksetzen für neues Produkt
-                    OnPropertyChanged(nameof(NewProduct));
+                    Products.Add(created);
+                    // Synchronisiere die JSON-Datei
+                    await _jsonStorage.SaveToFileAsync(Products.ToList());
+                    Console.WriteLine("Produkt wurde sowohl in der API als auch in der JSON-Datei hinzugefügt.");
                 }
                 else
                 {
-                    await Application.Current.MainPage.DisplayAlert("Fehler", "Produkt konnte nicht hinzugefügt werden.", "OK");
+                    // Füge das Produkt zur lokalen JSON-Datei hinzu
+                    NewProduct.Id = Products.Any() ? Products.Max(p => p.Id) + 1 : 1;
+                    Products.Add(NewProduct);
+                    await _jsonStorage.SaveToFileAsync(Products.ToList());
+                    Console.WriteLine("Produkt wurde zur JSON-Datei hinzugefügt.");
                 }
+
+                NewProduct = new Product();
+                OnPropertyChanged(nameof(NewProduct));
+
+                // Produkte neu laden, um die Benutzeroberfläche zu aktualisieren
+                await ReloadProducts();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Fehler beim Hinzufügen des Produkts: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Fehler", ex.Message, "OK");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+
+        }
+        private async Task ReloadProducts()
+        {
+            Products.Clear();
+            var products = await _jsonStorage.LoadFromFileAsync();
+            foreach (var product in products)
+            {
+                Products.Add(product);
+            }
+            Console.WriteLine("Produkte aus der JSON-Datei neu geladen.");
+        }
+
+        private async Task DeleteProduct(int id)
+        {
+            if (IsBusy)
+                return;
+
+            try
+            {
+                IsBusy = true;
+
+                try
+                {
+                    // Versuche, das Produkt über die API zu löschen
+                    await _apiService.DeleteProductAsync(id);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"API nicht verfügbar, lösche Produkt lokal: {ex.Message}");
+                }
+
+                var item = Products.FirstOrDefault(p => p.Id == id);
+                if (item != null)
+                {
+                    Products.Remove(item);
+                    await _jsonStorage.SaveToFileAsync(Products.ToList());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting product: {ex.Message}");
             }
             finally
             {
@@ -182,12 +239,23 @@ namespace SaveUpAppFrontend.ViewModels
             {
                 IsBusy = true;
 
-                // Lösche jedes Produkt einzeln
                 foreach (var product in Products.ToList())
                 {
-                    await _apiService.DeleteProductAsync(product.Id); // API-Aufruf für jedes Produkt
-                    Products.Remove(product); // Entferne das Produkt aus der Liste
+                    try
+                    {
+                        // Versuche, das Produkt über die API zu löschen
+                        await _apiService.DeleteProductAsync(product.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"API nicht verfügbar, lösche Produkt lokal: {ex.Message}");
+                    }
+
+                    Products.Remove(product);
                 }
+
+                // Aktualisiere die lokale JSON-Datei
+                await _jsonStorage.SaveToFileAsync(Products.ToList());
             }
             catch (Exception ex)
             {
@@ -198,30 +266,5 @@ namespace SaveUpAppFrontend.ViewModels
                 IsBusy = false;
             }
         }
-
-        private async Task DeleteProduct(int id)
-        {
-            if (IsBusy)
-                return;
-
-            try
-            {
-                IsBusy = true;
-                await _apiService.DeleteProductAsync(id);
-                var item = Products.FirstOrDefault(p => p.Id == id);
-                if (item != null)
-                    Products.Remove(item);
-            }
-            catch (Exception ex)
-            {
-                // Handle exceptions (e.g., API errors)
-                Console.WriteLine($"Error deleting product: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-        
     }
 }
