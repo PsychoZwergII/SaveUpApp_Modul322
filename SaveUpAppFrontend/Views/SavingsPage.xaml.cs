@@ -6,7 +6,17 @@ namespace SaveUpAppFrontend.Views
     {
         public SavingsPage()
         {
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fehler in InitializeComponent: {ex.Message}");
+                if (ex.InnerException != null)
+                    Console.WriteLine($"InnerException: {ex.InnerException.Message}");
+            }
+
             BindingContext = new SavingsViewModel();
         }
 

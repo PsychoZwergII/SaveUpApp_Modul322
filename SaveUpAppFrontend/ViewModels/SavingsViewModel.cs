@@ -38,25 +38,65 @@ namespace SaveUpAppFrontend.ViewModels
         public SavingsViewModel()
         {
             _apiService = new ApiService();
-            SavingGoal = Preferences.Get("SavingGoal", 0); // Set default saving goal
+            var savedValue = Preferences.Get("SavingGoal", "0"); // Hole den Wert als String
+            if (int.TryParse(savedValue, out int savingGoal))
+            {
+                SavingGoal = savingGoal; // Konvertierung erfolgreich
+            }
+            else
+            {
+                SavingGoal = 0; // Fallback-Wert
+            }
             _ = LoadTotalSavings();
         }
 
         public async Task ReloadData()
         {
-            await LoadTotalSavings();
+            try
+            {
+                // Versuche, die Produkte von der API zu laden
+                var products = await _apiService.GetProductsAsync();
+                TotalSavings = products.Sum(p => p.Price);
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"API-Verbindung fehlgeschlagen: {ex.Message}. Lade Produkte aus der lokalen JSON-Datei...");
+
+                // Fallback: Produkte aus der lokalen Datei laden
+                var products = await _apiService.LoadFromLocalFileAsync();
+                TotalSavings = products.Sum(p => p.Price);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ein unerwarteter Fehler ist aufgetreten: {ex.Message}");
+            }
+            finally
+            {
+                // Benachrichtige die Benutzeroberfläche über Änderungen
+                OnPropertyChanged(nameof(TotalSavings));
+                OnPropertyChanged(nameof(ProgressPercentage));
+            }
         }
 
         private async Task LoadTotalSavings()
         {
             try
             {
+                // Versuche, die Produkte von der API zu laden
                 var products = await _apiService.GetProductsAsync();
+                TotalSavings = products.Sum(p => p.Price);
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"--------- API-Verbindung fehlgeschlagen: {ex.Message}. Lade Produkte aus der lokalen JSON-Datei...");
+
+                // Fallback: Lade Produkte aus der lokalen Datei
+                var products = await _apiService.LoadFromLocalFileAsync();
                 TotalSavings = products.Sum(p => p.Price);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading savings: {ex.Message}");
+                Console.WriteLine($"--------- Ein unerwarteter Fehler ist aufgetreten: {ex.Message}");
             }
         }
     }

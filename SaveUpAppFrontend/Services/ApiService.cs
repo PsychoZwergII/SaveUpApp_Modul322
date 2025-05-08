@@ -50,11 +50,38 @@ namespace SaveUpAppFrontend.Services
 
             return new List<Product>();
         }
-               
 
-        public async Task<List<Product>> GetProductsAsync()
+
+        /*public async Task<List<Product>> GetProductsAsync()
         {
             return await _httpClient.GetFromJsonAsync<List<Product>>("products");
+        }*/
+        public async Task<List<Product>> GetProductsAsync()
+        {
+            try
+            {
+                // Versuche, die Produkte aus der API zu laden
+                var products = await _httpClient.GetFromJsonAsync<List<Product>>("products");
+
+                // Speichere die API-Daten lokal, falls erfolgreich
+                if (products != null)
+                {
+                    await SaveToLocalFileAsync(products);
+                }
+
+                return products ?? new List<Product>();
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"API nicht verfügbar: {ex.Message}. Lade Produkte aus der lokalen Datei...");
+                // Lade Produkte aus der lokalen Datei, falls die API nicht erreichbar ist
+                return await LoadFromLocalFileAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ein unerwarteter Fehler ist aufgetreten: {ex.Message}");
+                return new List<Product>();
+            }
         }
         public async Task<Product> AddProductAsync(Product product)
         {

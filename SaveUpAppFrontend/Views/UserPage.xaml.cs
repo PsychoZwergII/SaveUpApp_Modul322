@@ -7,6 +7,7 @@ namespace SaveUpAppFrontend.Views
         public UserPage()
         {
             InitializeComponent();
+            BindingContext = new UserViewModel();
 
         }
         private void SaveButton_Clicked(object sender, EventArgs e)
@@ -20,5 +21,7 @@ namespace SaveUpAppFrontend.Views
             // Sende Nachricht, um SavingsPage zu aktualisieren
             MessagingCenter.Send(this, "UpdateSavingsPage");
         }
+
+      
     }
 }
