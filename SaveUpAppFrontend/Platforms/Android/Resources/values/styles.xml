@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <style name="Maui.SplashTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <item name="android:windowBackground">@drawable/splash</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <!-- Weitere Anpassungen nach Bedarf -->
+  </style>
+  <style name="MainTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <!-- Hier kannst du weitere Theme-Attribute setzen -->
+  </style>
+</resources>

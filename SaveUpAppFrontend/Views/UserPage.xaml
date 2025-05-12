@@ -95,6 +95,7 @@
 
 			<!-- Optional: Save Button für Sparziel -->
             <Button Text="Sparziel speichern"
+                    Clicked="SaveButton_Clicked"
             Command="{Binding SaveGoalCommand}"
             BackgroundColor="{DynamicResource PrimaryColor}"
             TextColor="White"

@@ -20,6 +20,8 @@ namespace SaveUpAppFrontend.Views
 
             // Sende Nachricht, um SavingsPage zu aktualisieren
             MessagingCenter.Send(this, "UpdateSavingsPage");
+
+            Application.Current.MainPage = new AppShell();
         }
 
       
